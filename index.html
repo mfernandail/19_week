@@ -34,7 +34,7 @@
     </header>
 
     <main>
-      <!-- Form dinámico del usuario -->
+      
       <section class="shortener-form">
         <h1>URL Shortener</h1>
         <input type="url" id="longUrl" placeholder="Enter URL to shorten" />
@@ -46,8 +46,8 @@
         <button id="shortenBtn">Shorten URL</button>
       </section>
 
-      <!-- Resultado del usuario (volátil) -->
-      <section class="user-result" id="userResult" style="display: none">
+      <!-- <section class="user-result" id="userResult" style="display: none"> -->
+      <section class="user-result" id="userResult">
         <h2>Your Shortened URL</h2>
         <div class="short-url">
           <span id="userShortUrl"></span>
@@ -71,11 +71,11 @@
         <h2>Portfolio Analytics</h2>
         <div class="stats-grid">
           <div class="stat-card">
-            <span class="stat-number">18</span>
+            <span class="stat-number" id="totalProjects">18</span>
             <span class="stat-label">Total Projects</span>
           </div>
           <div class="stat-card">
-            <span class="stat-number">1,247</span>
+            <span class="stat-number" id="totalViews">1,247</span>
             <span class="stat-label">Total Views</span>
           </div>
         </div>
