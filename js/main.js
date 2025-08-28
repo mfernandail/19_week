@@ -9,6 +9,7 @@ let STATIC_PROJECTS = []
 let STATIC_STATS = {}
 
 let URL_SHORTEN
+let SHORTEN_URL = {}
 
 initApp()
 
@@ -18,11 +19,9 @@ $shortenBtn.addEventListener('click', createShortUrl)
 function createShortUrl(e) {
   if (e.key === 'Enter' || e.type === 'click') {
     const longUrlValue = $longUrl.value.trim()
+    const customURL = $customCode.value.trim()
 
-    if (!longUrlValue) {
-      console.log('Please enter a valid URL')
-      return
-    }
+    if (!longUrlValue) return
 
     const isValid = isValidURL(longUrlValue)
 
@@ -31,7 +30,51 @@ function createShortUrl(e) {
       $longUrl.value = ''
     }
 
-    generateRandomCode(longUrlValue)
+    let randomCode
+
+    if (customURL === '' || (customURL.length < 3 && customURL.length > 15)) {
+      randomCode = generateRandomCode()
+      createObjUrl(longUrlValue, randomCode)
+
+      return
+    }
+
+    const isValidCustom = isValidCustomCode(customURL)
+    if (!isValidCustom) return
+
+    createObjUrl(longUrlValue, customURL)
+  }
+}
+
+function generateRandomCode() {
+  const characters =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  const minLength = 6
+  const maxLength = 8
+  let code = ''
+
+  const lengthRandom =
+    Math.floor(Math.random() * (maxLength - minLength + 1)) + minLength
+
+  let char
+  for (let i = 0; i < lengthRandom; i++) {
+    char = Math.floor(Math.random() * characters.length)
+    code += characters[char]
+  }
+
+  return code
+}
+
+function displayResult() {
+  console.log('result')
+}
+
+function createObjUrl(longUrl, shortCode) {
+  console.log({ longUrl, shortCode })
+  SHORTEN_URL = {
+    longUrl,
+    shortCode,
+    createdAt: new Date().toISOString(),
   }
 }
 
@@ -62,18 +105,13 @@ function isValidURL(url) {
   return urlPattern.test(url)
 }
 
-function displayResult() {
-  console.log('result')
+function isValidCustomCode(customCode) {
+  const isValid = /^[A-Za-z0-9-]+$/
+  return isValid.test(customCode)
 }
-
-function generateRandomCode(url) {
-  URL_SHORTEN = url
-  saveToLocalStorage()
-}
-
 function saveToLocalStorage() {
   try {
-    localStorage.setItem('urlShortener', JSON.stringify(URL_SHORTEN))
+    localStorage.setItem('urlShortener', JSON.stringify(SHORTEN_URL))
   } catch (error) {
     console.error('Error saving url data:', error)
   }
@@ -81,7 +119,7 @@ function saveToLocalStorage() {
 
 function loadFromLocalStorage() {
   try {
-    URL_SHORTEN = JSON.parse(localStorage.getItem('urlShortener'))
+    SHORTEN_URL = JSON.parse(localStorage.getItem('urlShortener'))
   } catch (error) {
     console.error('Error loading url data:', error)
   }
