@@ -4,7 +4,7 @@ const $longUrl = document.getElementById('longUrl')
 const $customCode = document.getElementById('customCode')
 const $shortenBtn = document.getElementById('shortenBtn')
 const $userResult = document.getElementById('userResult')
-
+const $staticProjects = document.getElementById('staticProjects')
 
 let STATIC_PROJECTS = []
 let STATIC_STATS = {}
@@ -97,7 +97,23 @@ async function initApp() {
   $totalProjects.textContent = STATIC_STATS.totalProjects
   $totalViews.textContent = STATIC_STATS.totalClicks
 
+  renderStaticProjects()
   loadFromLocalStorage()
+}
+
+function renderStaticProjects() {
+  if (STATIC_PROJECTS || STATIC_PROJECTS.length > 0) {
+    const projectsHTML = STATIC_PROJECTS.map(
+      (project) => `
+       <div class="project-item">
+        <h3>${project.name}</h3>
+        <p>${project.description}</p>
+        <span>${window.location.origin}/${project.shortCode}</span>
+      </div> 
+    `
+    )
+    $staticProjects.innerHTML = projectsHTML
+  }
 }
 
 function isValidURL(url) {
@@ -106,7 +122,7 @@ function isValidURL(url) {
 }
 
 function isValidCustomCode(customCode) {
-  const isValid = /^[A-Za-z0-9-]{3,15}+$/
+  const isValid = /^[A-Za-z0-9-]{3,15}$/
   return isValid.test(customCode)
 }
 function saveToLocalStorage() {
