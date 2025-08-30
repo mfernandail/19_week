@@ -5,6 +5,7 @@ const $customCode = document.getElementById('customCode')
 const $shortenBtn = document.getElementById('shortenBtn')
 const $userResult = document.getElementById('userResult')
 
+
 let STATIC_PROJECTS = []
 let STATIC_STATS = {}
 
@@ -30,19 +31,19 @@ function createShortUrl(e) {
       $longUrl.value = ''
     }
 
-    let randomCode
+    let shortCode
 
-    if (customURL === '' || (customURL.length < 3 && customURL.length > 15)) {
-      randomCode = generateRandomCode()
-      createObjUrl(longUrlValue, randomCode)
-
-      return
+    if (!customURL || customURL.length < 3 || customURL.length > 15) {
+      shortCode = generateRandomCode()
+    } else {
+      const isValidCustom = isValidCustomCode(customURL)
+      if (!isValidCustom) return
+      shortCode = customURL
     }
 
-    const isValidCustom = isValidCustomCode(customURL)
-    if (!isValidCustom) return
-
-    createObjUrl(longUrlValue, customURL)
+    createObjUrl(longUrlValue, shortCode)
+    saveToLocalStorage()
+    renderResult()
   }
 }
 
@@ -65,12 +66,11 @@ function generateRandomCode() {
   return code
 }
 
-function displayResult() {
+function renderResult() {
   console.log('result')
 }
 
 function createObjUrl(longUrl, shortCode) {
-  console.log({ longUrl, shortCode })
   SHORTEN_URL = {
     longUrl,
     shortCode,
@@ -106,7 +106,7 @@ function isValidURL(url) {
 }
 
 function isValidCustomCode(customCode) {
-  const isValid = /^[A-Za-z0-9-]+$/
+  const isValid = /^[A-Za-z0-9-]{3,15}+$/
   return isValid.test(customCode)
 }
 function saveToLocalStorage() {
