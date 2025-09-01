@@ -1,10 +1,16 @@
+import QRCode from 'https://cdn.skypack.dev/qrcode'
+
 const $totalProjects = document.getElementById('totalProjects')
 const $totalViews = document.getElementById('totalViews')
 const $longUrl = document.getElementById('longUrl')
 const $customCode = document.getElementById('customCode')
-const $shortenBtn = document.getElementById('shortenBtn')
-const $userResult = document.getElementById('userResult')
 const $staticProjects = document.getElementById('staticProjects')
+const $shortenBtn = document.getElementById('shortenBtn')
+
+const $userResult = document.getElementById('userResult')
+const $userShortUrl = document.getElementById('userShortUrl')
+const $copyBtn = document.getElementById('copyBtn')
+const $userQrCode = document.getElementById('userQrCode')
 
 let STATIC_PROJECTS = []
 let STATIC_STATS = {}
@@ -44,6 +50,8 @@ function createShortUrl(e) {
     createObjUrl(longUrlValue, shortCode)
     saveToLocalStorage()
     renderResult()
+    $longUrl.value = ''
+    $customCode.value = ''
   }
 }
 
@@ -66,8 +74,32 @@ function generateRandomCode() {
   return code
 }
 
-function renderResult() {
-  console.log('result')
+async function renderResult() {
+  $userQrCode.innerHTML = '' // limpia el contenedor
+
+  const short = `${window.location.origin}/${SHORTEN_URL.shortCode}`
+  $userShortUrl.textContent = short
+
+  try {
+    const canvas = document.createElement('canvas')
+    await QRCode.toCanvas(canvas, short, {
+      width: 180,
+      margin: 1,
+      color: {
+        dark: '#000000', // color de los módulos
+        light: '#ffffff', // fondo
+      },
+    })
+    $userQrCode.appendChild(canvas)
+
+    // (opcional) copiar la URL corta:
+    $copyBtn?.addEventListener('click', () => {
+      navigator.clipboard.writeText(short)
+    })
+  } catch (err) {
+    console.error('Error generando QR:', err)
+    $userQrCode.textContent = 'Error generating QR'
+  }
 }
 
 function createObjUrl(longUrl, shortCode) {
