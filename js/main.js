@@ -1,174 +1,139 @@
 import QRCode from 'https://cdn.skypack.dev/qrcode'
 
-const $totalProjects = document.getElementById('totalProjects')
-const $totalViews = document.getElementById('totalViews')
+// --- DOM ---
 const $longUrl = document.getElementById('longUrl')
-const $customCode = document.getElementById('customCode')
-const $staticProjects = document.getElementById('staticProjects')
 const $shortenBtn = document.getElementById('shortenBtn')
-
 const $userResult = document.getElementById('userResult')
-const $userShortUrl = document.getElementById('userShortUrl')
-const $copyBtn = document.getElementById('copyBtn')
 const $userQrCode = document.getElementById('userQrCode')
+const $staticProjects = document.getElementById('staticProjects')
 
-let STATIC_PROJECTS = []
-let STATIC_STATS = {}
+// --- Estado (opcional) ---
+const LS_KEY_LAST_URL = 'qr:lastUrl'
 
-let URL_SHORTEN
-let SHORTEN_URL = {}
-
+// --- Init ---
 initApp()
 
-$longUrl.addEventListener('keypress', createShortUrl)
-$shortenBtn.addEventListener('click', createShortUrl)
+// Enter o click para generar
+$longUrl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') handleGenerate()
+})
 
-function createShortUrl(e) {
-  if (e.key === 'Enter' || e.type === 'click') {
-    const longUrlValue = $longUrl.value.trim()
-    const customURL = $customCode.value.trim()
+$shortenBtn.addEventListener('click', handleGenerate)
 
-    if (!longUrlValue) return
+async function initApp() {
+  // Oculta el resultado al cargar
+  $userResult.style.display = 'none'
 
-    const isValid = isValidURL(longUrlValue)
+  // Rellena con la última URL usada (si existe)
+  const last = localStorage.getItem(LS_KEY_LAST_URL)
+  if (last) $longUrl.value = last
 
-    if (!isValid) {
-      $longUrl.focus()
-      $longUrl.value = ''
-    }
+  // Carga proyectos estáticos
+  await renderStaticProjects()
+}
 
-    let shortCode
-
-    if (!customURL || customURL.length < 3 || customURL.length > 15) {
-      shortCode = generateRandomCode()
-    } else {
-      const isValidCustom = isValidCustomCode(customURL)
-      if (!isValidCustom) return
-      shortCode = customURL
-    }
-
-    createObjUrl(longUrlValue, shortCode)
-    saveToLocalStorage()
-    renderResult()
-    $longUrl.value = ''
-    $customCode.value = ''
+function isValidURL(url) {
+  // Acepta http/https (recomendado para abrir bien en móviles)
+  try {
+    const u = new URL(url)
+    return u.protocol === 'http:' || u.protocol === 'https:'
+  } catch {
+    return false
   }
 }
 
-function generateRandomCode() {
-  const characters =
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  const minLength = 6
-  const maxLength = 8
-  let code = ''
+async function handleGenerate() {
+  const raw = $longUrl.value.trim()
+  if (!raw) return
 
-  const lengthRandom =
-    Math.floor(Math.random() * (maxLength - minLength + 1)) + minLength
-
-  let char
-  for (let i = 0; i < lengthRandom; i++) {
-    char = Math.floor(Math.random() * characters.length)
-    code += characters[char]
+  if (!isValidURL(raw)) {
+    alert('Please enter a valid URL starting with http:// or https://')
+    $longUrl.focus()
+    return
   }
 
-  return code
+  // Guarda la última URL ingresada
+  localStorage.setItem(LS_KEY_LAST_URL, raw)
+
+  // Renderiza resultado + QR
+  await renderResult(raw)
 }
 
-async function renderResult() {
-  $userQrCode.innerHTML = '' // limpia el contenedor
+async function renderResult(urlToEncode) {
+  // Limpia estado previo
+  $userQrCode.innerHTML = ''
 
-  const short = `${window.location.origin}/${SHORTEN_URL.shortCode}`
-  $userShortUrl.textContent = short
+  // Muestra el bloque de resultado
+  $userResult.style.display = 'block'
 
   try {
     const canvas = document.createElement('canvas')
-    await QRCode.toCanvas(canvas, short, {
-      width: 180,
+    await QRCode.toCanvas(canvas, urlToEncode, {
+      width: 220,
       margin: 1,
-      color: {
-        dark: '#000000', // color de los módulos
-        light: '#ffffff', // fondo
-      },
+      color: { dark: '#000000', light: '#ffffff' },
     })
     $userQrCode.appendChild(canvas)
-
-    // (opcional) copiar la URL corta:
-    $copyBtn?.addEventListener('click', () => {
-      navigator.clipboard.writeText(short)
-    })
   } catch (err) {
     console.error('Error generando QR:', err)
     $userQrCode.textContent = 'Error generating QR'
   }
 }
 
-function createObjUrl(longUrl, shortCode) {
-  SHORTEN_URL = {
-    longUrl,
-    shortCode,
-    createdAt: new Date().toISOString(),
-  }
-}
-
-async function loadProjectsData() {
+async function renderStaticProjects() {
   try {
-    const response = await fetch('../data/projects.json')
-    const data = await response.json()
-    return data
-  } catch (error) {
-    throw new Error('Error loading projects data ', error)
-  }
-}
+    const res = await fetch('../data/projects.json', { cache: 'no-store' })
+    const data = await res.json()
+    const list = Array.isArray(data.projects) ? data.projects : []
 
-async function initApp() {
-  const data = await loadProjectsData()
+    if (!list.length) {
+      $staticProjects.innerHTML = '<p>No projects to display.</p>'
+      return
+    }
 
-  STATIC_PROJECTS = data.projects
-  STATIC_STATS = data.stats
+    // Limpia
+    $staticProjects.innerHTML = ''
 
-  $totalProjects.textContent = STATIC_STATS.totalProjects
-  $totalViews.textContent = STATIC_STATS.totalClicks
+    for (const project of list) {
+      const article = document.createElement('article')
+      article.classList.add('project-item')
 
-  renderStaticProjects()
-  loadFromLocalStorage()
-}
+      const title = document.createElement('h3')
+      title.textContent = project.name ?? 'Untitled'
 
-function renderStaticProjects() {
-  if (STATIC_PROJECTS || STATIC_PROJECTS.length > 0) {
-    const projectsHTML = STATIC_PROJECTS.map(
-      (project) => `
-       <div class="project-item">
-        <h3>${project.name}</h3>
-        <p>${project.description}</p>
-        <span>${window.location.origin}/${project.shortCode}</span>
-      </div> 
-    `
-    )
-    $staticProjects.innerHTML = projectsHTML
-  }
-}
+      const desc = document.createElement('p')
+      desc.textContent = project.description ?? ''
 
-function isValidURL(url) {
-  const urlPattern = /^https?:\/\/.+\..+/
-  return urlPattern.test(url)
-}
+      const link = document.createElement('a')
+      link.href = project.url
+      link.target = '_blank'
+      link.rel = 'noopener noreferrer'
+      link.textContent = project.url
 
-function isValidCustomCode(customCode) {
-  const isValid = /^[A-Za-z0-9-]{3,15}$/
-  return isValid.test(customCode)
-}
-function saveToLocalStorage() {
-  try {
-    localStorage.setItem('urlShortener', JSON.stringify(SHORTEN_URL))
-  } catch (error) {
-    console.error('Error saving url data:', error)
-  }
-}
+      // contenedor para el QR
+      const qrDiv = document.createElement('div')
+      qrDiv.classList.add('project-qr')
 
-function loadFromLocalStorage() {
-  try {
-    SHORTEN_URL = JSON.parse(localStorage.getItem('urlShortener'))
-  } catch (error) {
-    console.error('Error loading url data:', error)
+      // genera QR en canvas
+      if (project.url) {
+        const canvas = document.createElement('canvas')
+        await QRCode.toCanvas(canvas, project.url, {
+          width: 120,
+          margin: 1,
+          color: { dark: '#000000', light: '#ffffff' },
+        })
+        qrDiv.appendChild(canvas)
+      }
+
+      article.appendChild(title)
+      article.appendChild(desc)
+      article.appendChild(link)
+      article.appendChild(qrDiv)
+
+      $staticProjects.appendChild(article)
+    }
+  } catch (e) {
+    console.error('Error loading projects.json:', e)
+    $staticProjects.innerHTML = '<p>Error loading projects.</p>'
   }
 }
