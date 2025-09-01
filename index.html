@@ -20,7 +20,7 @@
     <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#ffffff" />
 
-    <meta property="og:title" content="Wk 19: Short URL" />
+    <meta property="og:title" content="Wk 19: QR Generator" />
     <meta
       property="og:description"
       content="Step by step, line by line — becoming a Full Stack Developer in one year."
@@ -29,64 +29,43 @@
   </head>
   <body>
     <header>
-      <img class="header__logo" src="./assets/images/logo.svg" />
-      <h1 class="header__title">Short URL</h1>
+      <img class="header-logo" src="./assets/images/logo.svg" />
+      <h1 class="header-title">QR Generator</h1>
     </header>
 
     <main>
-      
-      <section class="shortener-form">
-        <h1>URL Shortener</h1>
-        <input type="url" id="longUrl" placeholder="Enter URL to shorten" />
-        <input
-          type="text"
-          id="customCode"
-          placeholder="Custom code (optional)"
-        />
-        <button id="shortenBtn">Shorten URL</button>
-      </section>
-
-      <!-- <section class="user-result" id="userResult" style="display: none"> -->
-      <section class="user-result" id="userResult">
-        <h2>Your Shortened URL</h2>
-        <div class="short-url">
-          <span id="userShortUrl"></span>
-          <button id="copyBtn">Copy</button>
+      <section class="card qr-generator">
+        <h2>Generate your QR Code</h2>
+        <div class="input-group">
+          <input
+            type="url"
+            id="longUrl"
+            placeholder="Enter any URL (e.g: https://google.com)"
+            autocomplete="url"
+          />
         </div>
-        <div class="qr-code" id="userQrCode"></div>
-        <p class="note">
-          *This URL is temporary and will be replaced when you create a new one
+        <button id="shortenBtn" class="generate-btn">🚀 Generate QR</button>
+
+        <div class="result-section" id="userResult">
+          <h3>✅ Your QR code is ready!</h3>
+          <div class="qr-container" id="userQrCode"></div>
+        </div>
+      </section>
+
+      <section class="card projects-section">
+        <h2>🛠️ My Projects</h2>
+        <p style="margin-bottom: 20px; color: #4a5568">
+          Here are some of my development projects:
         </p>
-      </section>
-
-      <!-- Proyectos estáticos (tu portfolio) -->
-      <section class="url-list">
-        <h2>My Project Shortcuts</h2>
-        <p>Here are some of my development projects:</p>
-        <div id="staticProjects"></div>
-      </section>
-
-      <!-- Estadísticas estáticas -->
-      <section class="analytics">
-        <h2>Portfolio Analytics</h2>
-        <div class="stats-grid">
-          <div class="stat-card">
-            <span class="stat-number" id="totalProjects">18</span>
-            <span class="stat-label">Total Projects</span>
-          </div>
-          <div class="stat-card">
-            <span class="stat-number" id="totalViews">1,247</span>
-            <span class="stat-label">Total Views</span>
-          </div>
+        <div class="projects-grid" id="staticProjects">
         </div>
       </section>
     </main>
 
     <footer>
-      <p>2025 - Maria Fernanda</p>
+      <p>Project #19 - 365 Days Coding Challenge</p>
     </footer>
 
     <script type="module" src="./js/main.js"></script>
-
   </body>
 </html>
